@@ -1,0 +1,28 @@
+parameters:
+    context_restrictor.twig.extension.class: Sescandell\ContextRestrictorBundle\Twig\ContextRestrictorExtension
+    
+services:
+    context_restrictor.storage.session:
+        class:  Sescandell\ContextRestrictorBundle\Storage\SessionContextRestrictorStorage
+        arguments: [ '@session', '@event_dispatcher' ]
+    
+    context_restrictor.manager:
+        class: Sescandell\ContextRestrictorBundle\Manager\ContextRestrictorManager
+        calls:
+          - [ setRegistry,  [ '@doctrine', 'contextrestriction' ] ]
+          - [ setRegistryListener, [ '@context_restrictor.doctrine_listener' ] ]
+        tags:
+            - { name: kernel.event_listener, event: context_restrictor.changed, method: onContextRestrictorChange }
+            - { name: kernel.event_listener, event: context_restrictor.initialized, method: onContextRestrictorInitialize }
+    
+    context_restrictor.doctrine_listener:
+        class:  Sescandell\ContextRestrictorBundle\Listener\DoctrineListener
+        tags:
+            - { name: kernel.event_listener, event: context_restrictor.changed, method: onContextRestrictorChange }
+            - { name: kernel.event_listener, event: context_restrictor.initialized, method: onContextRestrictorInitialize }
+            - { name: doctrine.event_listener, event: prePersist }
+    
+    context_restrictor.logout_handler:
+        class: Sescandell\ContextRestrictorBundle\Listener\LogoutHandler
+        # TODO: make it dynamic
+        arguments: [ '@context_restrictor.storage.session' ]
