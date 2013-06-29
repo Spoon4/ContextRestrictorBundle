@@ -37,6 +37,11 @@ class ContextRestrictorManager
     protected $registryListener;
 
     /**
+     * @var array
+     */
+    protected $targetRestrictions = array();
+
+    /**
      *
      * @param RegistryInterface $doctrine
      * @param string $filterName
@@ -55,6 +60,18 @@ class ContextRestrictorManager
     public function setRegistryListener(RegistryListenerInterface $listener)
     {
         $this->registryListener = $listener;
+    }
+
+    /**
+     * @param array $restriction
+     */
+    public function addRestriction(array $restriction)
+    {
+        if (!array_key_exists('target_entity', $restriction) && !array_key_exists('field_name', $restriction)) {
+            throw new \Exception('Invalid restriction format.');
+        }
+
+        $this->targetRestrictions = $restriction;
     }
 
     /**
@@ -103,7 +120,9 @@ class ContextRestrictorManager
     public function enable()
     {
         if (!$this->enabled) {
-            $this->registry->getManager()->getFilters()->enable($this->filterName)->setRestrictedValue($this->value);
+            $this->registry->getManager()->getFilters()->enable($this->filterName)
+                ->setRestrictedValue($this->value)
+                ->setTargetRestriction($this->targetRestrictions['target_entity'], $this->targetRestrictions['field_name']);
             $this->registryListener->enable();
             $this->enabled = true;
 

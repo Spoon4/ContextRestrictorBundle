@@ -20,30 +20,10 @@ class ContextRestrictorFilter extends SQLFilter
      * @param string $entityName
      * @param string $fieldName
      */
-    public function setConfiguration($entityName, $fieldName)
+    public function setTargetRestriction($entityName, $fieldName)
     {
         $this->setParameter('context_restrictor.entity_name', $entityName);
         $this->setParameter('context_restrictor.field_name', $fieldName);
-    }
-
-    /**
-     * (non-PHPdoc)
-     * @see \Doctrine\ORM\Query\Filter\SQLFilter::addFilterConstraint()
-     */
-    public function addFilterConstraint(ClassMetadata $targetEntity, $targetTableAlias)
-    {
-        if ($this->getParameter('context_restrictor.entity_name') == $targetEntity->getName()) {
-            return $this->getConstraint($targetTableAlias, $targetEntity->columnNames[$this->getParameter('context_restrictor.field_name')]);
-        }
-
-        foreach ($targetEntity->associationMappings as $am) {
-            if ($this->getParameter('context_restrictor.entity_name') === $am['targetEntity'] && in_array($am['type'], array(ClassMetadata::ONE_TO_ONE, ClassMetadata::MANY_TO_ONE))) {
-                // FIXME : manage multiple joinColumns
-                return $this->getConstraint($targetTableAlias, /*$am['fieldName']*/ $am['joinColumns'][0]['name']);
-            }
-        }
-
-        return '';
     }
 
     /**
@@ -65,6 +45,26 @@ class ContextRestrictorFilter extends SQLFilter
     public function getRestrictedValue()
     {
         return $this->getParameter('context_restrictor.constraint');
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see \Doctrine\ORM\Query\Filter\SQLFilter::addFilterConstraint()
+     */
+    public function addFilterConstraint(ClassMetadata $targetEntity, $targetTableAlias)
+    {
+        if ($this->getParameter('context_restrictor.entity_name') == $targetEntity->getName()) {
+            return $this->getConstraint($targetTableAlias, $targetEntity->columnNames[$this->getParameter('context_restrictor.field_name')]);
+        }
+
+        foreach ($targetEntity->associationMappings as $am) {
+            if ($this->getParameter('context_restrictor.entity_name') === $am['targetEntity'] && in_array($am['type'], array(ClassMetadata::ONE_TO_ONE, ClassMetadata::MANY_TO_ONE))) {
+                // FIXME : manage multiple joinColumns
+                return $this->getConstraint($targetTableAlias, /*$am['fieldName']*/ $am['joinColumns'][0]['name']);
+            }
+        }
+
+        return '';
     }
 
     /**
