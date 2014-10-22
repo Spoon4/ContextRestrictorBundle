@@ -23,18 +23,36 @@ class SescandellContextRestrictorExtension extends Extension
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
 
-        $processor = new Processor();
-        $configuration = new Configuration();
-        $config = $processor->processConfiguration($configuration, $configs);
+        $config = $this->processConfiguration($this->getConfiguration($configs, $container), $configs);
 
-        $container->getDefinition('context_restrictor.doctrine_listener')->addArgument($config['target_entity']);
-        $container->getDefinition('context_restrictor.manager')->addMethodCall(
-            'addRestriction',
-            array(
-                'target_entity' => $config['target_entity'],
-                'field_name' => $config['field_name']
-            )
-        );
+        $container
+            ->getDefinition('context_restrictor.doctrine_listener')
+            ->addArgument($config['target_class']);
+
+        $container
+            ->getDefinition('context_restrictor.manager')
+            ->setArguments(array(
+                array(
+                    'targetClass' => $config['target_class'],
+                    'fieldName' => $config['field_name'],
+                    'nullableMappings' => array_key_exists('nullable_mappings', $config) ? $config['nullable_mappings'] : array()
+                ),
+                $config['filter']['name'],
+                $config['filter']['enabled']
+            ));
+
+        $container->setAlias('context_restrictor.volatile_storage', 'context_restrictor.storage.in_memory');
+        $container->setAlias('context_restrictor.persistent_storage', 'context_restrictor.storage.session');
+    }
+
+    /**
+     * @param array $config
+     * @param ContainerBuilder $container
+     * @return \Sescandell\ContextRestrictorBundle\DependencyInjection\Configuration
+     */
+    public function getConfiguration(array $config, ContainerBuilder $container)
+    {
+        return new Configuration($this->getAlias());
     }
 
     public function getAlias()

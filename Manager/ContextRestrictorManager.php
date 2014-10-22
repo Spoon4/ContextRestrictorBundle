@@ -42,15 +42,30 @@ class ContextRestrictorManager
     protected $targetRestrictions = array();
 
     /**
+     * @param array $config
+     * @param string $filterName
+     * @param string $enabled
+     */
+    public function __construct(array $restrictions, $filterName, $enabled = true)
+    {
+        $this->targetRestrictions = $config;
+        $this->filterName = $filterName;
+        $this->enabled = $enabled;
+    }
+
+    /**
      *
      * @param RegistryInterface $doctrine
      * @param string $filterName
      */
-    public function setRegistry(RegistryInterface $registry, $filterName)
+    public function setRegistry(RegistryInterface $registry)
     {
         // TODO: currently, work only with Doctrine registry
         $this->registry = $registry;
-        $this->filterName = $filterName;
+
+        if ($this->enabled) {
+            $this->configureFilter();
+        }
     }
 
     /**
@@ -60,18 +75,10 @@ class ContextRestrictorManager
     public function setRegistryListener(RegistryListenerInterface $listener)
     {
         $this->registryListener = $listener;
-    }
 
-    /**
-     * @param array $restriction
-     */
-    public function addRestriction(array $restriction)
-    {
-        if (!array_key_exists('target_entity', $restriction) && !array_key_exists('field_name', $restriction)) {
-            throw new \Exception('Invalid restriction format.');
+        if ($this->enabled) {
+            $this->registryListener->enable();
         }
-
-        $this->targetRestrictions = $restriction;
     }
 
     /**
@@ -102,11 +109,8 @@ class ContextRestrictorManager
     public function setValue($value)
     {
         $this->value = $value;
-        // Pourquoi ne pas se baser sur $this->enabled ????
-        // Il y a certainement une raison... mais je ne sais plus laquelle
-        // ou pas d'ailleurs... :D
-        if ($this->isFilterEnabled()) {
-            $this->registry->getManager()->getFilters()->getFilter($this->filterName)->setRestrictedValue($this->value);
+        if ($this->enabled) {
+            $this->configureFilter();
 
             return true;
         }
@@ -120,9 +124,8 @@ class ContextRestrictorManager
     public function enable()
     {
         if (!$this->enabled) {
-            $this->registry->getManager()->getFilters()->enable($this->filterName)
-                ->setRestrictedValue($this->value)
-                ->setTargetRestriction($this->targetRestrictions['target_entity'], $this->targetRestrictions['field_name']);
+            $this->configureFilter();
+
             $this->registryListener->enable();
             $this->enabled = true;
 
@@ -149,13 +152,13 @@ class ContextRestrictorManager
     }
 
     /**
-     * Check if registry filter is enabled.
-     * Returns true if enabled, false otherwise.
-     *
-     * @return boolean
+     * Configure the filter with filtered value and
+     * targeted class.
      */
-    protected function isFilterEnabled()
+    protected function configureFilter()
     {
-        return in_array($this->filterName, array_keys($this->registry->getManager()->getFilters()->getEnabledFilters()));
+        $filter = $this->registry->getManagerForClass($this->config['targetClass'])->getFilters()->getFilter($this->filterName);
+        $filter->setRestrictedValue($this->value);
+        $filter->configure($this->config);
     }
 }

@@ -13,6 +13,19 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 class Configuration implements ConfigurationInterface
 {
     /**
+     * @var string
+     */
+    protected $alias;
+
+    /**
+     * @param string $alias
+     */
+    public function __construct($alias)
+    {
+        $this->alias = $alias;
+    }
+
+    /**
      * Generates the configuration tree builder.
      *
      *
@@ -21,13 +34,34 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder();
-        $rootNode    = $treeBuilder->root('context_restrictor');
+        $rootNode    = $treeBuilder->root($this->alias);
 
         $rootNode
             ->children()
-                // TODO: use an array for multiple restrictions
-                ->scalarNode('target_entity')->end()
-                ->scalarNode('field_name')->end()
+                ->scalarNode('target_class')
+                    ->isRequired()
+                    ->cannotBeEmpty()
+                ->end()
+                ->scalarNode('field_name')
+                    ->isRequired()
+                    ->cannotBeEmpty()
+                ->end()
+                ->arrayNode('nullable_mappings')
+                    ->prototype('scalar')->end()
+                ->end()
+                ->arrayNode('filter')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('name')
+                            ->isRequired()
+                            ->cannotBeEmpty()
+                            ->defaultValue('contextrestriction')
+                        ->end()
+                        ->booleanNode('enabled')
+                            ->defaultTrue()
+                        ->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $treeBuilder;

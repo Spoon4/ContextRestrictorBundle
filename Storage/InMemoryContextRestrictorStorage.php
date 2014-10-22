@@ -1,7 +1,6 @@
 <?php
 namespace Sescandell\ContextRestrictorBundle\Storage;
 
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Sescandell\ContextRestrictorBundle\Event\ContextRestrictorStorageEvents;
 use Sescandell\ContextRestrictorBundle\Event\ContextRestrictorChangedEvent;
@@ -9,25 +8,26 @@ use Sescandell\ContextRestrictorBundle\Event\ContextRestrictorInitializedEvent;
 use Sescandell\ContextRestrictorBundle\Exception\NoActiveContextFoundException;
 
 /**
- * @author Stéphane Escandell
  */
-class SessionContextRestrictorStorage implements ContextRestrictorStorageInterface
+class InMemoryContextRestrictorStorage implements ContextRestrictorStorageInterface
 {
-    const CONTEXT_KEY_NAME = 'context_restrictor.storage';
-
     /**
-     * @var SessionInterface
+     * @var mixed
      */
-    protected $session;
+    protected $context = null;
 
     /**
      * @var EventDispatcherInterface
      */
     protected $eventDispatcher;
 
-    public function __construct(SessionInterface $session, EventDispatcherInterface $eventDispatcher)
+    /**
+     * Default constructor
+     *
+     * @param EventDispatcherInterface $eventDispatcher
+     */
+    public function __construct(EventDispatcherInterface $eventDispatcher)
     {
-        $this->session = $session;
         $this->eventDispatcher = $eventDispatcher;
     }
 
@@ -46,7 +46,7 @@ class SessionContextRestrictorStorage implements ContextRestrictorStorageInterfa
      */
     public function hasActiveContext()
     {
-        return $this->session->has(self::CONTEXT_KEY_NAME);
+        return !is_null($this->context);
     }
 
     /**
@@ -56,7 +56,7 @@ class SessionContextRestrictorStorage implements ContextRestrictorStorageInterfa
     public function setActiveContext($context)
     {
         $oldValue = $this->doGetActiveContext();
-        $this->session->set(self::CONTEXT_KEY_NAME, $context);
+        $this->context = $context;
 
         $this->sendChangedEvent($oldValue);
     }
@@ -81,7 +81,7 @@ class SessionContextRestrictorStorage implements ContextRestrictorStorageInterfa
     public function clearActiveContext()
     {
         $oldValue = $this->doGetActiveContext();
-        $this->session->remove(self::CONTEXT_KEY_NAME);
+        $this->context = null;
 
         $this->sendChangedEvent($oldValue);
     }
@@ -93,7 +93,7 @@ class SessionContextRestrictorStorage implements ContextRestrictorStorageInterfa
      */
     protected function doGetActiveContext()
     {
-        return $this->session->get(self::CONTEXT_KEY_NAME, null);
+        return $this->context;
     }
 
     /**
@@ -117,5 +117,4 @@ class SessionContextRestrictorStorage implements ContextRestrictorStorageInterfa
 
         $this->eventDispatcher->dispatch(ContextRestrictorStorageEvents::CONTEXT_INITIALIZED, $event);
     }
-
 }

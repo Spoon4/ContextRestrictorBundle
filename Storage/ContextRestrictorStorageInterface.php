@@ -7,6 +7,11 @@ namespace Sescandell\ContextRestrictorBundle\Storage;
 interface ContextRestrictorStorageInterface
 {
     /**
+     * Initialize storage
+     */
+    public function initialize();
+
+    /**
      * Check if a context is already registered.
      * Returns true if any, false otherwise
      *
