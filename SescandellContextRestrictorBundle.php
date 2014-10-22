@@ -9,4 +9,13 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
  */
 class SescandellContextRestrictorBundle extends Bundle
 {
+    /**
+     * @return \Sescandell\ContextRestrictorBundle\DependencyInjection\SescandellContextRestrictorExtension
+     */
+    public function getContainerExtension()
+    {
+        $this->extension = new DependencyInjection\SescandellContextRestrictorExtension();
+
+        return $this->extension;
+    }
 }
