@@ -1,0 +1,22 @@
+{
+    "name": "sescandell/context-restrictor-bundle",
+    "type": "symfony-bundle",
+    "description": "Add automatic entities filters for Symfony2 Doctrine applications",
+    "license": "MIT and Apache-2.0",
+    "authors": [
+        {
+            "name": "Stéphane Escandell",
+            "email": "stephane.escandell@gmail.com",
+            "role": "Author"
+        }
+    ],
+    "require": {
+        "symfony/symfony": ">= 2.2.0"
+    },
+    "autoload": {
+        "psr-0": {
+            "Sescandell\\ContextRestrictorBundle": ""
+        }
+    },
+    "target-dir": "Sescandell/ContextRestrictorBundle"
+}
