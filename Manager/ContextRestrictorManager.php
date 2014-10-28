@@ -42,13 +42,13 @@ class ContextRestrictorManager
     protected $targetRestrictions = array();
 
     /**
-     * @param array $config
+     * @param array $restrictions
      * @param string $filterName
      * @param string $enabled
      */
     public function __construct(array $restrictions, $filterName, $enabled = true)
     {
-        $this->targetRestrictions = $config;
+        $this->targetRestrictions = $restrictions;
         $this->filterName = $filterName;
         $this->enabled = $enabled;
     }
@@ -157,8 +157,8 @@ class ContextRestrictorManager
      */
     protected function configureFilter()
     {
-        $filter = $this->registry->getManagerForClass($this->config['targetClass'])->getFilters()->getFilter($this->filterName);
+        $filter = $this->registry->getManagerForClass($this->targetRestrictions['targetClass'])->getFilters()->getFilter($this->filterName);
         $filter->setRestrictedValue($this->value);
-        $filter->configure($this->config);
+        $filter->configure($this->targetRestrictions);
     }
 }

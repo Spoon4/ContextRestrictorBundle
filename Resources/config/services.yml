@@ -13,8 +13,8 @@ services:
     context_restrictor.manager:
         class: Sescandell\ContextRestrictorBundle\Manager\ContextRestrictorManager
         calls:
-          - [ setRegistry,  [ '@doctrine' ]
-          - [ setRegistryListener, [ '@context_restrictor.doctrine_listener' ] ]
+          - [ setRegistry,  [ '@doctrine' ] ]
+          - [ setRegistryListener, [ '@context_restrictor.doctrine_listener' ] ]
         tags:
             - { name: kernel.event_listener, event: context_restrictor.changed, method: onContextRestrictorChange }
             - { name: kernel.event_listener, event: context_restrictor.initialized, method: onContextRestrictorInitialize }
